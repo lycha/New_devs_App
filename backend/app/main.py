@@ -90,6 +90,15 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up...")
 
+    # Initialize PostgreSQL database pool
+    try:
+        from .core.database_pool import db_pool
+
+        await db_pool.initialize()
+        logger.info("✅ Database pool initialized")
+    except Exception as e:
+        logger.error(f"❌ Database pool initialization failed: {e}")
+
     # Initialize Supabase connection pool
     try:
         from .core.supabase_connection_pool import supabase_pool
@@ -126,6 +135,15 @@ async def lifespan(app: FastAPI):
     # Shutdown async processor
     await async_processor.shutdown()
     logger.info("Async processor shutdown completed")
+
+    # Close database pool
+    try:
+        from .core.database_pool import db_pool
+
+        await db_pool.close()
+        logger.info("✅ Database pool closed")
+    except Exception as e:
+        logger.warning(f"⚠️ Error closing database pool: {e}")
 
     # Close connection pool
     try:
